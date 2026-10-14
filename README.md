@@ -41,13 +41,13 @@ Modern human-computer interfaces rely heavily on physical touch (keyboards, touc
 
 ```mermaid
 flowchart LR
-    A[📹 Webcam Stream (640x480)] --> B[🧠 MediaPipe Hands Neural Net]
-    B --> C[📍 21 3D Coordinate Landmarks]
-    C --> D[📐 Euclidean Distance & Angle Calculation]
-    D --> E[🎯 Gesture Classification Engine]
-    E --> F[🎨 60 FPS HTML5 Canvas Skeleton Overlay]
-    E --> G[🔊 Web Audio API Synthesizer Feedback]
-    E --> H[⚡ Telemetry & State Bus]
+    A["📹 Webcam Stream (640x480)"] --> B["🧠 MediaPipe Hands Neural Net"]
+    B --> C["📍 21 3D Coordinate Landmarks"]
+    C --> D["📐 Euclidean Distance & Angle Calculation"]
+    D --> E["🎯 Gesture Classification Engine"]
+    E --> F["🎨 60 FPS HTML5 Canvas Skeleton Overlay"]
+    E --> G["🔊 Web Audio API Synthesizer Feedback"]
+    E --> H["⚡ Telemetry & State Bus"]
 ```
 
 ---
