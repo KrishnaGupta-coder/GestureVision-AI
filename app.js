@@ -20,6 +20,7 @@ const logStream = document.getElementById('logStream');
 // Buttons
 const btnStart = document.getElementById('btnStart');
 const btnToggleLandmarks = document.getElementById('btnToggleLandmarks');
+const btnMirror = document.getElementById('btnMirror');
 const btnAudioToggle = document.getElementById('btnAudioToggle');
 const btnClearLogs = document.getElementById('btnClearLogs');
 const audioState = document.getElementById('audioState');
@@ -31,6 +32,7 @@ const tilePeace = document.getElementById('tilePeace');
 const tileFist = document.getElementById('tileFist');
 
 let showSkeleton = true;
+let mirrorFeed = false;
 let audioEnabled = true;
 let isStreaming = false;
 let lastFrameTime = performance.now();
@@ -158,6 +160,10 @@ function onResults(results) {
   canvasElement.height = videoElement.videoHeight || 480;
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  if (mirrorFeed) {
+    canvasCtx.translate(canvasElement.width, 0);
+    canvasCtx.scale(-1, 1);
+  }
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -220,9 +226,25 @@ hands.onResults(onResults);
 
 let camera = null;
 
-// Camera Start Handler
+// Camera Start / Stop Toggle Handler
 btnStart.addEventListener('click', async () => {
-  if (isStreaming) return;
+  if (isStreaming) {
+    if (camera) camera.stop();
+    if (videoElement.srcObject) {
+      videoElement.srcObject.getTracks().forEach(t => t.stop());
+      videoElement.srcObject = null;
+    }
+    isStreaming = false;
+    streamDot.classList.remove('active');
+    streamStatus.textContent = 'Camera Offline';
+    fpsCounter.textContent = '0';
+    landmarkCount.textContent = '0/21';
+    hudGestureName.textContent = 'NONE';
+    btnStart.textContent = 'Initialize Vision Camera';
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    appendLog('Camera stream stopped cleanly.', 'info');
+    return;
+  }
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
@@ -234,7 +256,7 @@ btnStart.addEventListener('click', async () => {
 
     camera = new Camera(videoElement, {
       onFrame: async () => {
-        await hands.send({ image: videoElement });
+        if (isStreaming) await hands.send({ image: videoElement });
       },
       width: 640,
       height: 480
@@ -242,9 +264,10 @@ btnStart.addEventListener('click', async () => {
 
     await camera.start();
     isStreaming = true;
+    btnStart.disabled = false;
     streamDot.classList.add('active');
     streamStatus.textContent = 'Camera Live (60 FPS)';
-    btnStart.textContent = 'Camera Active';
+    btnStart.textContent = 'Stop Camera';
     appendLog('Webcam connected. Neural model tracking active.', 'info');
     playTone(580, 0.15);
   } catch (err) {
@@ -260,6 +283,14 @@ btnToggleLandmarks.addEventListener('click', () => {
   btnToggleLandmarks.textContent = showSkeleton ? 'Toggle Skeleton' : 'Skeleton: OFF';
   appendLog(`Skeleton overlay: ${showSkeleton ? 'Enabled' : 'Disabled'}`, 'info');
 });
+
+if (btnMirror) {
+  btnMirror.addEventListener('click', () => {
+    mirrorFeed = !mirrorFeed;
+    btnMirror.textContent = mirrorFeed ? 'Mirror: ON' : 'Mirror: OFF';
+    appendLog(`Webcam mirror: ${mirrorFeed ? 'Enabled' : 'Disabled'}`, 'info');
+  });
+}
 
 btnAudioToggle.addEventListener('click', () => {
   audioEnabled = !audioEnabled;
